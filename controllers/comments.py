@@ -40,6 +40,7 @@ def create_comment(tea_id: int, comment: CreateCommentSchema, db: Session = Depe
     db.refresh(new_comment) # Refresh to get the auto-generated id
     return new_comment
 
+
 @router.put("/comments/{comment_id}", response_model=CommentSchema)
 def update_comment(comment_id: int, comment: UpdateCommentSchema, db: Session = Depends(get_db)):
     db_comment = db.query(CommentModel).filter(CommentModel.id == comment_id).first()
@@ -53,3 +54,14 @@ def update_comment(comment_id: int, comment: UpdateCommentSchema, db: Session = 
     db.commit()  # Save changes
     db.refresh(db_comment)  # Refresh to get updated data
     return db_comment
+
+
+@router.delete("/comments/{comment_id}")
+def delete_comment(comment_id: int, db: Session = Depends(get_db)):
+    db_comment = db.query(CommentModel).filter(CommentModel.id == comment_id).first()
+    if not db_comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+
+    db.delete(db_comment)  # Remove from database
+    db.commit()  # Save changes
+    return {"message": f"Comment with ID {comment_id} has been deleted"}
