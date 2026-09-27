@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from models.comment import CommentModel
 from models.tea import TeaModel
-from serializers.comment import CommentSchema
+from serializers.comment import CommentSchema, CreateCommentSchema
 from typing import List
 from database import get_db
 
@@ -26,3 +26,16 @@ def get_comment(comment_id: int, db: Session = Depends(get_db)):
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
     return comment
+
+
+@router.post("/teas/{tea_id}/comments", response_model=CommentSchema)
+def create_comment(tea_id: int, comment: CreateCommentSchema, db: Session = Depends(get_db)):
+    tea = db.query(TeaModel).filter(TeaModel.id == tea_id).first()
+    if not tea:
+        raise HTTPException(status_code=404, detail="Tea not found")
+
+    new_comment = CommentModel(**comment.dict(), tea_id=tea_id) # Link the new comment to the tea
+    db.add(new_comment)
+    db.commit() # Save to database
+    db.refresh(new_comment) # Refresh to get the auto-generated id
+    return new_comment
