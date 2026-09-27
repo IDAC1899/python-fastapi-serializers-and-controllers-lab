@@ -18,3 +18,11 @@ def get_comments_for_tea(tea_id: int, db: Session = Depends(get_db)):
     if not tea:
         raise HTTPException(status_code=404, detail="Tea not found")
     return tea.comments
+
+
+@router.get("/comments/{comment_id}", response_model=CommentSchema)
+def get_comment(comment_id: int, db: Session = Depends(get_db)):
+    comment = db.query(CommentModel).filter(CommentModel.id == comment_id).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    return comment
